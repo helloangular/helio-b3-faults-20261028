@@ -1,0 +1,32 @@
+# Group B lane placeholder (qa227, 28 Oct 2026), published by worker B2's lane.py so the shared Group B
+# GitHub App can be installed and onboarded. Dispatch-only, never triggered by push or schedule.
+# The owning worker (b3 upper-cased: B1/B3) replaces or adds its own workflows, each push with its
+# helio/workflow/<sha> tag. Nothing is deployed.
+name: b3-faults-placeholder
+run-name: ${{ inputs.helio_execution_id || github.run_id }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      helio_execution_id:
+        type: string
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: b3-faults-test
+    steps:
+      - run: echo "b3-faults placeholder test"
+  production:
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: b3-faults-production
+    steps:
+      - run: echo "b3-faults placeholder production"
