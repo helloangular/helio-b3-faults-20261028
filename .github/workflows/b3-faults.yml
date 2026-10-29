@@ -2,7 +2,8 @@
 # (TC-36..40, 173, 179, 182, 188). Helio dispatches one run; the test job waits at b3-faults-test, then the
 # production job waits at b3-faults-production (required reviewer: helio-release-reviewer). Adapted from the
 # owner's qualified owner-227-provider.yml. Repository variables (no new commit needed):
-# B3_FAULTS_TEST_SLEEP (seconds, default 40), B3_FAULTS_TEST_MODE (fail | timeout). Nothing is deployed;
+# B3_FAULTS_TEST_SLEEP (seconds, default 40), B3_FAULTS_TEST_MODE (fail | timeout); a release version containing
+# "lockfail" makes the test job fail (failure-locked console fixture). Nothing is deployed;
 # production records one synthetic GitHub deployment as evidence.
 name: b3-faults
 run-name: ${{ inputs.helio_execution_id }}
@@ -55,11 +56,14 @@ jobs:
         env:
           MODE: ${{ vars.B3_FAULTS_TEST_MODE }}
           SLEEP_SECONDS: ${{ vars.B3_FAULTS_TEST_SLEEP || '40' }}
+          RELEASE_VERSION: ${{ inputs.release_version }}
         run: |
           set -euo pipefail
           if [ "$MODE" = "timeout" ]; then sleep 150; fi
           sleep "$SLEEP_SECONDS"
           if [ "$MODE" = "fail" ]; then echo "B3_FAULTS_TEST_MODE=fail: synthetic test failure"; exit 1; fi
+          # Failure-locked fixture (QA console recipe): only a release whose version contains "lockfail" fails here.
+          case "$RELEASE_VERSION" in *lockfail*) echo "release version $RELEASE_VERSION requests a synthetic test failure"; exit 1;; esac
           echo "synthetic tests passed"
 
   production:
