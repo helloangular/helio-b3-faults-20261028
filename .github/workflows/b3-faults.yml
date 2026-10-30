@@ -15,7 +15,7 @@ on:
         type: choice
         required: false
         default: b3-faults-test
-        options: [b3-faults-test, b3-faults-production]
+        options: [b3-faults-test, b3-faults-production, b3-faults-qa]
       helio_execution_id:
         type: string
         required: false
@@ -108,3 +108,14 @@ jobs:
           api="https://api.github.com/repos/$GITHUB_REPOSITORY"
           deployment_id="$(curl -fsS -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "$api/deployments" --data @deployment-evidence.json | python3 -c 'import json,sys;print(json.load(sys.stdin)["id"])')"
           curl -fsS -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "$api/deployments/$deployment_id/statuses" --data '{"state":"success","description":"Synthetic deployment evidence; no application deployed"}' > /dev/null
+
+  # TC-127 fixture environment (30 Oct 2026): a governed environment with no gate history, so an environment-protection
+  # Apply can take its lease. Skipped for every ordinary release (no gate, no deployment); only a release version
+  # containing "tc127" would run it.
+  qa:
+    if: ${{ contains(inputs.release_version, 'tc127') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: b3-faults-qa
+    steps:
+      - run: echo "TC-127 fixture environment reached"
